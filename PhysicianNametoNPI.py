@@ -50,6 +50,7 @@ def get_npi_from_name(physician_name, wrkbk, sh, second_round):
             api_url = "https://npiregistry.cms.hhs.gov/api/?version=2.0&&pretty=true&first_name={fname}&last_name={lname}&use_first_name_alias=false".format(fname=physician_name.first_name, lname = physician_name.last_name)
         else:
             api_url = "https://npiregistry.cms.hhs.gov/api/?version=2.0&&pretty=true&state={st}&first_name={fname}&last_name={lname}&use_first_name_alias=false".format(st = physician_name.state,fname=physician_name.first_name, lname = physician_name.last_name)
+        api_url.replace(" ","")
         response = requests.get(api_url)
         result_count = response.json()["result_count"]
         #edge case if the doctor doesnt exist
