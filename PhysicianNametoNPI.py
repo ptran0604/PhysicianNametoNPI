@@ -19,17 +19,18 @@ class PhysicianName:
 # load excel with its path
 
 #load excel to get list of fname, lname, state
-def get_physician_name_from_excel(wrkbk, second_round):
+def get_physician_name_from_excel(wrkbk, second_round, sheet_name):
+    print(sheet_name)
     physician_names = []
 
     # load excel with its path
 
-    sh = wrkbk['Temple']
+    sh = wrkbk[sheet_name]
 
-    # iterate through excel and display data
+    # iterate through row in excel and display data
     for i in range(1, sh.max_row+1):
         state = sh.cell(row = i, column = 4).value.upper()
-        second_last_name = sh.cell(row = i, column = 3).value.upper()
+        second_last_name = sh.cell(row = i, column = 3).value
         first_name = sh.cell(row=i, column = 1).value.upper()
         last_name = sh.cell(row=i, column=2).value.upper()
         npi = sh.cell(row = i, column = 5).value
@@ -39,9 +40,9 @@ def get_physician_name_from_excel(wrkbk, second_round):
 #process each entry in the list
 def get_npi_lists(physician_names, wrkbk, sh, second_round):
     for physician_name in physician_names:
-      if(physician_name.npi is None):
-          t = Thread(target= get_npi_from_name, args=(physician_name, wrkbk, sh, second_round))
-          t.start()
+        if(physician_name.npi is None):
+            t = Thread(target= get_npi_from_name, args=(physician_name, wrkbk, sh, second_round))
+            t.start()
     wrkbk.save("/Users/ptran2/Downloads/ACOs_1.xlsx")
 
 def get_npi_from_name(physician_name, wrkbk, sh, second_round):
@@ -51,14 +52,14 @@ def get_npi_from_name(physician_name, wrkbk, sh, second_round):
         if(physician_name.state is None):
             api_url = "https://npiregistry.cms.hhs.gov/api/?version=2.0&&pretty=true&first_name={fname}&last_name={lname}&use_first_name_alias=false".format(fname=physician_name.first_name, lname = physician_name.last_name)
         else:
-            api_url = "https://npiregistry.cms.hhs.gov/api/?version=2.0&&pretty=true&state={st}&first_name={fname}&last_name={lname}&use_first_name_alias=false".format(st = physician_name.state,fname=physician_name.first_name, lname = physician_name.last_name)
-        api_url.replace(" ","")
+            api_url = "https://npiregistry.cms.hhs.gov/api/?version=2.0&&pretty=true&state={st}&first_name={fname}&last_name={lname}&use_first_name_alias=false".format(st=physician_name.state,fname=physician_name.first_name,lname=physician_name.last_name)
+        api_url.replace(" ", "")
         response = requests.get(api_url)
         result_count = response.json()["result_count"]
-        #edge case if the doctor doesnt exist
-        if(physician_name.row % 50 == 0):
+        if(physician_name.row % 100 == 0):
             wrkbk.save("/Users/ptran2/Downloads/ACOs_1.xlsx")
             print(physician_name.row)
+        #edge case if the doctor doesnt exist
         if(result_count > 0):
             #cellref=sh.cell(row=physician_name.row, column=5)
             #cellref=response.json()["results"][0]["number"]
@@ -95,10 +96,9 @@ def get_npi_from_name(physician_name, wrkbk, sh, second_round):
     if(second_round):
         wrkbk.save("/Users/ptran2/Downloads/ACOs_1.xlsx")
 wrkbk = openpyxl.load_workbook("/Users/ptran2/Downloads/ACOs_1.xlsx")
-get_physician_name_from_excel(wrkbk, False)
-time.sleep(5)
-get_physician_name_from_excel(wrkbk, True)
-
-
-
-
+for sheet_name in wrkbk.sheetnames:
+    print(sheet_name)
+    get_physician_name_from_excel(wrkbk, False, sheet_name)
+    time.sleep(5)
+    get_physician_name_from_excel(wrkbk, True, sheet_name)
+    time.sleep(5)
