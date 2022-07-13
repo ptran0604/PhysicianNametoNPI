@@ -28,10 +28,12 @@ def get_physician_name_from_excel(wrkbk, second_round):
 
     # iterate through excel and display data
     for i in range(1, sh.max_row+1):
-        state = sh.cell(row = i, column = 4).value
-        second_last_name = sh.cell(row = i, column = 3).value
+        state = sh.cell(row = i, column = 4).value.upper()
+        second_last_name = sh.cell(row = i, column = 3).value.upper()
+        first_name = sh.cell(row=i, column = 1).value.upper()
+        last_name = sh.cell(row=i, column=2).value.upper()
         npi = sh.cell(row = i, column = 5).value
-        physician_name = PhysicianName(sh.cell(row=i, column = 1).value, sh.cell(row=i, column=2).value, state, i, second_last_name, npi)
+        physician_name = PhysicianName(first_name, last_name, state, i, second_last_name, npi)
         physician_names.append(physician_name)
     get_npi_lists(physician_names, wrkbk, sh, second_round)
 #process each entry in the list
@@ -50,6 +52,7 @@ def get_npi_from_name(physician_name, wrkbk, sh, second_round):
             api_url = "https://npiregistry.cms.hhs.gov/api/?version=2.0&&pretty=true&first_name={fname}&last_name={lname}&use_first_name_alias=false".format(fname=physician_name.first_name, lname = physician_name.last_name)
         else:
             api_url = "https://npiregistry.cms.hhs.gov/api/?version=2.0&&pretty=true&state={st}&first_name={fname}&last_name={lname}&use_first_name_alias=false".format(st = physician_name.state,fname=physician_name.first_name, lname = physician_name.last_name)
+        api_url.replace(" ","")
         response = requests.get(api_url)
         result_count = response.json()["result_count"]
         #edge case if the doctor doesnt exist
